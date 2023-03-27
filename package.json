@@ -1,0 +1,20 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "./index.ts",
+  "license": "MIT",
+  "scripts": {
+    "compile": "tsc",
+    "basicstart": "tsc && node dist/server/index.js",
+    "start": "ts-node server/index.ts"
+  },
+  "author": "JKirito",
+  "dependencies": {
+    "global": "^4.4.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.10"
+  }
+}
