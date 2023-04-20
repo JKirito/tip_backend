@@ -14,5 +14,8 @@ export interface BaseUser {
 
 export interface ErrorMessage {
   msg: string;
-  code: string;
+  code: number;
+}
+export interface TokenData {
+  token: string;
 }
