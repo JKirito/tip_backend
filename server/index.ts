@@ -78,6 +78,7 @@ app.get('/validate', validateLoginStatus, (req, res) => {
   console.log('I am the protected content');
   res.status(200).json({
     msg: 'You are authorized',
+    username: res.locals.username,
   });
 });
 
@@ -117,7 +118,8 @@ app.post('/logout', (req, res) => {
       return console.log(err);
     }
   });
-  res.redirect('/');
+  // res.redirect('/');
+  res.sendStatus(200);
 });
 
 app.listen(PORT, () => {

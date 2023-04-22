@@ -2,6 +2,13 @@ import { NextFunction, Request, Response } from 'express';
 import { ErrorMessage } from '../interfaces';
 import jwt from 'jsonwebtoken';
 import config from 'config';
+import { JwtPayload } from 'jsonwebtoken';
+
+declare module 'jsonwebtoken' {
+  export interface JwtPayload {
+    username: string;
+  }
+}
 
 export const validateLoginStatus = (
   req: Request,
@@ -21,7 +28,14 @@ export const validateLoginStatus = (
     try {
       const hashkey = config.get<string>('jwthashkey');
       const decoded = jwt.verify(token, hashkey);
+      console.log('decoded is ', decoded);
       console.log('You are authorized to view this content');
+      if (typeof decoded === 'string') {
+      } else {
+        res.locals = {
+          username: decoded.username,
+        };
+      }
       next();
     } catch (err) {
       console.log('You are not authorized');
