@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import authRouter from './routers/authRouter';
 import cors from 'cors';
+import mongoose from 'mongoose';
 
 dotenv.config();
 
@@ -18,21 +19,27 @@ app.use(
   })
 );
 
-// declare module 'express-session' {
-//   interface SessionData {
-//     user: BaseUser;
-//   }
-// }
+app.use('/', authRouter);
 
 if (!PORT) {
-  console.error('Failed To Initialize Application');
+  console.error('Failed To Initialize Application, Missing Port');
   process.exit();
 }
 
 console.log('Initialized Successfuly');
 
-app.use('/', authRouter);
+main().catch((err) => console.error);
 
-app.listen(PORT, () => {
-  console.log(`Server up at PORT ${PORT}`);
-});
+async function main() {
+  app.listen(PORT, () => {
+    console.log(`Server up at PORT ${PORT}`);
+  });
+
+  try {
+    await mongoose.connect(`mongodb://127.0.0.1:27017/userdb`).then((res) => {
+      console.log(`Connected to MongoDB successfully`);
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}

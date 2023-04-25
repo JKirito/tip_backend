@@ -3,6 +3,8 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { ErrorMessage } from '../interfaces';
 import { validateLoginStatus } from '../utils/routes';
+import * as argon2 from 'argon2';
+import { userModel } from '../modals/user.modal';
 
 const router = express.Router();
 
@@ -26,6 +28,25 @@ router.post('/login', (req, res) => {
 
 router.post('/logout', (req, res) => {
   res.sendStatus(200);
+});
+
+router.post('/signup', async (req, res) => {
+  const { username, password } = req.body;
+  const result = await userModel.find({ username: username });
+  console.log(result);
+  if (result.length === 0) {
+    res.status(409).json({
+      msg: 'Failed to sign up, username already taken',
+    });
+  } else {
+    const hash = await argon2.hash(password);
+    console.log(hash);
+    const document = await userModel.create({
+      username: username,
+      password: hash,
+    });
+    res.sendStatus(200);
+  }
 });
 
 router.get('/validate', validateLoginStatus, (req, res) => {
