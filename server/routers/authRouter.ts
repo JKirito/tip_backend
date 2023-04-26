@@ -8,21 +8,34 @@ import { userModel } from '../modals/user.modal';
 
 const router = express.Router();
 
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { password, username } = req.body;
   const hashkey = config.get<string>('jwthashkey');
-  if (username === password) {
-    const token = jwt.sign({ username }, hashkey, {
-      expiresIn: '1h',
-    });
-    res.json({ token });
-  } else {
+  const doc = await userModel.findOne({
+    username: username,
+  });
+  if (!doc) {
     const message: ErrorMessage = {
-      msg: 'Invalid credentials',
+      msg: 'No Such User Found',
       code: 401,
     };
     res.statusCode = 401;
     res.json(message);
+  } else {
+    const valid = await argon2.verify(doc.password, password);
+    if (valid) {
+      const token = jwt.sign({ username }, hashkey, {
+        expiresIn: '1h',
+      });
+      res.json({ token });
+    } else {
+      const message: ErrorMessage = {
+        msg: 'Invalid credentials',
+        code: 401,
+      };
+      res.statusCode = 401;
+      res.json(message);
+    }
   }
 });
 

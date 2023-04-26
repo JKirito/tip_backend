@@ -1,4 +1,4 @@
-import { prop, getModelForClass } from '@typegoose/typegoose';
+import { prop, getModelForClass, DocumentType } from '@typegoose/typegoose';
 
 export default class User {
   @prop()
@@ -6,6 +6,12 @@ export default class User {
 
   @prop()
   public password!: string;
+
+  public static async validateUserCredentials(
+    this: DocumentType<User>,
+    username: string,
+    password: string
+  ) {}
 }
 
 export const userModel = getModelForClass(User);
