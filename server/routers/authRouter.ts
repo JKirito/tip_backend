@@ -34,7 +34,7 @@ router.post('/signup', async (req, res) => {
   const { username, password } = req.body;
   const result = await userModel.find({ username: username });
   console.log(result);
-  if (result.length === 0) {
+  if (result.length > 0) {
     res.status(409).json({
       msg: 'Failed to sign up, username already taken',
     });

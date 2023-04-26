@@ -36,7 +36,7 @@ async function main() {
   });
 
   try {
-    await mongoose.connect(`mongodb://127.0.0.1:27017/userdb`).then((res) => {
+    await mongoose.connect(`mongodb://127.0.0.1:27017/tip`).then((res) => {
       console.log(`Connected to MongoDB successfully`);
     });
   } catch (err) {
