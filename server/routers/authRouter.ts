@@ -1,10 +1,11 @@
 import config from 'config';
-import express from 'express';
+import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { ErrorMessage } from '../interfaces';
+import { ErrorMessage, JobPostData } from '../interfaces';
 import { validateLoginStatus } from '../utils/routes';
 import * as argon2 from 'argon2';
 import { userModel } from '../modals/user.modal';
+import { JobModal } from '../modals/jobs.modal';
 
 const router = express.Router();
 
@@ -81,5 +82,28 @@ router.get('/protected', (req, res) => {
   }
   console.log(authHeader);
 });
+
+router.post(
+  '/jobpost',
+  validateLoginStatus,
+  async (req: Request<{}, {}, JobPostData>, res: Response) => {
+    const { description, location, subject, title } = req.body;
+    const user = await userModel.find({
+      username: res.locals.username,
+    });
+    if (!user || !user[0]) res.status(401).send(`Failed to process request`);
+    const job = await JobModal.create({
+      description,
+      location,
+      subject,
+      title,
+      user: user[0]._id,
+    });
+    console.log(job);
+    res.status(200).json({
+      job: job,
+    });
+  }
+);
 
 export default router;

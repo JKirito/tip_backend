@@ -11,6 +11,12 @@ export interface User {}
 export interface BaseUser {
   username: string;
 }
+export interface JobPostData {
+  title: string;
+  subject: string;
+  location: string;
+  description: string;
+}
 
 export interface ErrorMessage {
   msg: string;
