@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { ErrorMessage, JobPostData } from '../interfaces';
 import { validateLoginStatus } from '../utils/routes';
 import * as argon2 from 'argon2';
-import { userModel } from '../modals/user.modal';
+import User, { userModel } from '../modals/user.modal';
 import { JobModal } from '../modals/jobs.modal';
 
 const router = express.Router();
@@ -105,5 +105,21 @@ router.post(
     });
   }
 );
+
+router.get('/jobpost', async (req, res) => {
+  const jobs = await JobModal.find({}).populate('user');
+  const jobsModified = jobs.map((job) => {
+    const { username } = job.user as User;
+    return {
+      title: job.title,
+      subject: job.subject,
+      location: job.location,
+      description: job.description,
+      username: username,
+      user_id: job.user._id,
+    };
+  });
+  res.status(200).json(jobsModified);
+});
 
 export default router;
