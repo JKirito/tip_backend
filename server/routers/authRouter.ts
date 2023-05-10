@@ -2,7 +2,7 @@ import config from 'config';
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { ErrorMessage, JobPostData } from '../interfaces';
-import { validateLoginStatus } from '../utils/routes';
+import { isAdmin, validateLoginStatus } from '../utils/routes';
 import * as argon2 from 'argon2';
 import User, { userModel } from '../modals/user.modal';
 import { JobModal } from '../modals/jobs.modal';
@@ -28,7 +28,7 @@ router.post('/login', async (req, res) => {
       const token = jwt.sign({ username }, hashkey, {
         expiresIn: '1h',
       });
-      res.json({ token });
+      res.json({ token, role: doc.role });
     } else {
       const message: ErrorMessage = {
         msg: 'Invalid credentials',
@@ -86,8 +86,9 @@ router.get('/protected', (req, res) => {
 router.post(
   '/jobpost',
   validateLoginStatus,
+  // isAdmin,
   async (req: Request<{}, {}, JobPostData>, res: Response) => {
-    const { description, location, subject, title } = req.body;
+    const { description, location, subject, title, jobType } = req.body;
     const user = await userModel.find({
       username: res.locals.username,
     });
@@ -98,6 +99,7 @@ router.post(
       subject,
       title,
       user: user[0]._id,
+      jobType,
     });
     console.log(job);
     res.status(200).json({
@@ -117,9 +119,18 @@ router.get('/jobpost', async (req, res) => {
       description: job.description,
       username: username,
       user_id: job.user._id,
+      jobType: job.jobType,
     };
+    1;
   });
   res.status(200).json(jobsModified);
+});
+
+router.get('/admin', validateLoginStatus, isAdmin, async (req, res) => {
+  console.log('I am the admin');
+  res.status(200).json({
+    msg: 'You are authorized admin user',
+  });
 });
 
 export default router;

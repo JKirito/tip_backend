@@ -34,6 +34,7 @@ export const validateLoginStatus = (
       } else {
         res.locals = {
           username: decoded.username,
+          role: decoded.role,
         };
       }
       next();
@@ -46,5 +47,22 @@ export const validateLoginStatus = (
       };
       res.status(401).json(msg);
     }
+  }
+};
+
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (res.locals.role === 'admin') {
+      next();
+    } else {
+      throw new Error('User is not admin');
+    }
+  } catch (err) {
+    console.log('Users role is not admin');
+    const msg: ErrorMessage = {
+      code: 401,
+      msg: 'Only admins role can see this content',
+    };
+    res.status(401).json(msg);
   }
 };
