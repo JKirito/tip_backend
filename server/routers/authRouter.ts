@@ -1,28 +1,42 @@
 import config from 'config';
-import express from 'express';
+import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { ErrorMessage } from '../interfaces';
+import { ErrorMessage, JobPostData } from '../interfaces';
 import { validateLoginStatus } from '../utils/routes';
 import * as argon2 from 'argon2';
-import { userModel } from '../modals/user.modal';
+import User, { userModel } from '../modals/user.modal';
+import { JobModal } from '../modals/jobs.modal';
 
 const router = express.Router();
 
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { password, username } = req.body;
   const hashkey = config.get<string>('jwthashkey');
-  if (username === password) {
-    const token = jwt.sign({ username }, hashkey, {
-      expiresIn: '1h',
-    });
-    res.json({ token });
-  } else {
+  const doc = await userModel.findOne({
+    username: username,
+  });
+  if (!doc) {
     const message: ErrorMessage = {
-      msg: 'Invalid credentials',
+      msg: 'No Such User Found',
       code: 401,
     };
     res.statusCode = 401;
     res.json(message);
+  } else {
+    const valid = await argon2.verify(doc.password, password);
+    if (valid) {
+      const token = jwt.sign({ username }, hashkey, {
+        expiresIn: '1h',
+      });
+      res.json({ token });
+    } else {
+      const message: ErrorMessage = {
+        msg: 'Invalid credentials',
+        code: 401,
+      };
+      res.statusCode = 401;
+      res.json(message);
+    }
   }
 });
 
@@ -67,6 +81,45 @@ router.get('/protected', (req, res) => {
     res.status(401).json(msg);
   }
   console.log(authHeader);
+});
+
+router.post(
+  '/jobpost',
+  validateLoginStatus,
+  async (req: Request<{}, {}, JobPostData>, res: Response) => {
+    const { description, location, subject, title } = req.body;
+    const user = await userModel.find({
+      username: res.locals.username,
+    });
+    if (!user || !user[0]) res.status(401).send(`Failed to process request`);
+    const job = await JobModal.create({
+      description,
+      location,
+      subject,
+      title,
+      user: user[0]._id,
+    });
+    console.log(job);
+    res.status(200).json({
+      job: job,
+    });
+  }
+);
+
+router.get('/jobpost', async (req, res) => {
+  const jobs = await JobModal.find({}).populate('user');
+  const jobsModified = jobs.map((job) => {
+    const { username } = job.user as User;
+    return {
+      title: job.title,
+      subject: job.subject,
+      location: job.location,
+      description: job.description,
+      username: username,
+      user_id: job.user._id,
+    };
+  });
+  res.status(200).json(jobsModified);
 });
 
 export default router;
