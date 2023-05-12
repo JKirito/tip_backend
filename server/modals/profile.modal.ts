@@ -17,6 +17,9 @@ export default class Profile {
   public lastName!: string;
 
   @prop()
+  public dob!: Date;
+
+  @prop()
   public email!: string;
 
   @prop()
@@ -38,7 +41,7 @@ export default class Profile {
   public education!: string;
 
   @prop()
-  public experience!: string;
+  public perferences!: string;
 
   @prop()
   public skills!: string;
