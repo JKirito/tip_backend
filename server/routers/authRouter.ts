@@ -1,7 +1,7 @@
 import config from 'config';
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { ErrorMessage, JobPostData } from '../interfaces';
+import { ErrorMessage, JobPostData, Roles } from '../interfaces';
 import { isAdmin, validateLoginStatus } from '../utils/routes';
 import * as argon2 from 'argon2';
 import User, { userModel } from '../modals/user.modal';
@@ -45,7 +45,7 @@ router.post('/logout', (req, res) => {
 });
 
 router.post('/signup', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, role, adminRefCode } = req.body;
   const result = await userModel.find({ username: username });
   console.log(result);
   if (result.length > 0) {
@@ -55,11 +55,26 @@ router.post('/signup', async (req, res) => {
   } else {
     const hash = await argon2.hash(password);
     console.log(hash);
-    const document = await userModel.create({
-      username: username,
-      password: hash,
-    });
-    res.sendStatus(200);
+    const adminCode = config.get<string>('adminrefcode');
+    if (role === Roles.ADMIN && adminCode === adminRefCode) {
+      const document = await userModel.create({
+        username: username,
+        password: hash,
+        role: Roles.ADMIN,
+      });
+      res.sendStatus(200);
+    } else if (role === Roles.ADMIN && adminCode !== adminRefCode) {
+      res.status(401).json({
+        msg: 'Failed to sign up, invalid admin ref code',
+      });
+    } else {
+      const document = await userModel.create({
+        username: username,
+        password: hash,
+        role: role as Roles,
+      });
+      res.sendStatus(200);
+    }
   }
 });
 
