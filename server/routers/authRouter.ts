@@ -1,12 +1,19 @@
 import config from 'config';
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { ErrorMessage, JobPostData, ProfileData, Roles } from '../interfaces';
+import {
+  ErrorMessage,
+  JobPostData,
+  JobsFetchData,
+  ProfileData,
+  Roles,
+} from '../interfaces';
 import { isAdmin, validateLoginStatus } from '../utils/routes';
 import * as argon2 from 'argon2';
 import User, { userModel } from '../modals/user.modal';
 import { JobModal } from '../modals/jobs.modal';
 import { ProfileModel } from '../modals/profile.modal';
+import { post } from '@typegoose/typegoose';
 
 const router = express.Router();
 
@@ -206,6 +213,96 @@ router.post('/profile', validateLoginStatus, async (req, res) => {
     });
   }
 });
+
+router.post(
+  '/quickapply',
+  validateLoginStatus,
+  async (
+    req: Request<{}, {}, { job: JobsFetchData; username: string }>,
+    res: Response
+  ) => {
+    const user = await userModel.findOne({ username: req.body.username });
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+    const postuser = await userModel.findOne({
+      username: req.body.job.username,
+    });
+    console.log(req.body.username, user);
+    const prevDoc = await JobModal.findOne({
+      user: postuser!._id,
+      title: req.body.job.title,
+    }).populate('applicants');
+    console.log(prevDoc);
+    const alreadyApplied = prevDoc?.applicants.find((applicant) => {
+      // console.log('comparing ', applicant._id, ' and ', user!._id);
+      return String(applicant._id) === String(user!._id);
+    });
+    console.log('alreadyapplied ', alreadyApplied);
+    if (alreadyApplied !== undefined) {
+      res.status(200).json({
+        msg: 'You have already applied to this job',
+      });
+    } else {
+      const doc = await JobModal.findOneAndUpdate(
+        { user: postuser!._id, title: req.body.job.title },
+        { $push: { applicants: user } }
+      );
+      console.log(doc);
+
+      res.status(200).json({
+        msg: 'Applied successfully',
+      });
+    }
+  }
+);
+
+router.post(
+  '/deletejob',
+  validateLoginStatus,
+  async (
+    req: Request<{}, {}, { job: JobsFetchData; username: string }>,
+    res: Response
+  ) => {
+    const user = await userModel.findOne({ username: req.body.username });
+    const result = await JobModal.findOneAndDelete({
+      title: req.body.job.title,
+      user: user!._id,
+    });
+    console.log(result);
+    if (result) {
+      res.status(200).json({
+        msg: 'Job deleted successfully',
+      });
+    } else {
+      res.status(404).json({
+        msg: 'Something went wrong, Job not found',
+      });
+    }
+  }
+);
+
+router.post(
+  '/applicants',
+  validateLoginStatus,
+  async (
+    req: Request<{}, {}, { title: string; username: string }>,
+    res: Response
+  ) => {
+    let user = await userModel.findOne({ username: req.body.username });
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+    const result = await JobModal.findOne({
+      title: req.body.title,
+      user: user!._id,
+    }).populate('applicants');
+    if (!result) return res.status(404).json({ msg: 'User not found' });
+    // const sanitizedOutput = result.applicants.map((applicant) => {
+    //   return {
+    //     username: applicant._id,
+    //   };
+    // });
+
+    res.status(200).json(result.applicants);
+  }
+);
 
 router.get('/admin', validateLoginStatus, isAdmin, async (req, res) => {
   console.log('I am the admin');

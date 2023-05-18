@@ -27,6 +27,9 @@ export default class Job {
 
   @prop({ required: true })
   public jobType!: JobType;
+
+  @prop({ ref: () => User, default: [] })
+  public applicants!: Ref<User>[];
 }
 
 export const JobModal = getModelForClass(Job);
