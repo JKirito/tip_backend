@@ -1,11 +1,12 @@
 import config from 'config';
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { ErrorMessage, JobPostData, Roles } from '../interfaces';
+import { ErrorMessage, JobPostData, ProfileData, Roles } from '../interfaces';
 import { isAdmin, validateLoginStatus } from '../utils/routes';
 import * as argon2 from 'argon2';
 import User, { userModel } from '../modals/user.modal';
 import { JobModal } from '../modals/jobs.modal';
+import { ProfileModel } from '../modals/profile.modal';
 
 const router = express.Router();
 
@@ -45,7 +46,8 @@ router.post('/logout', (req, res) => {
 });
 
 router.post('/signup', async (req, res) => {
-  const { username, password, role, adminRefCode } = req.body;
+  const { username, password, role, adminRefCode, email, firstName, lastName } =
+    req.body;
   const result = await userModel.find({ username: username });
   console.log(result);
   if (result.length > 0) {
@@ -61,6 +63,13 @@ router.post('/signup', async (req, res) => {
         username: username,
         password: hash,
         role: Roles.ADMIN,
+      });
+      const profileDocument = await ProfileModel.create({
+        user: document._id,
+        email: email,
+        username: username,
+        firstName: firstName,
+        lastName: lastName,
       });
       res.sendStatus(200);
     } else if (role === Roles.ADMIN && adminCode !== adminRefCode) {
@@ -139,6 +148,63 @@ router.get('/jobpost', async (req, res) => {
     1;
   });
   res.status(200).json(jobsModified);
+});
+
+router.get('/profile', validateLoginStatus, async (req, res) => {
+  const username: string = res.locals.username;
+  const result = await ProfileModel.findOne({ username: username });
+  if (result) {
+    res.status(200).json(result);
+  } else {
+    res.status(404).json({
+      msg: 'No profile found',
+    });
+  }
+});
+
+router.post('/profile', validateLoginStatus, async (req, res) => {
+  const username: string = res.locals.username;
+  const {
+    firstName,
+    lastName,
+    email,
+    city,
+    coverLetter,
+    dob,
+    education,
+    phone,
+    postcode,
+    preferences,
+    skills,
+    state,
+    resume,
+  } = req.body as ProfileData;
+  console.log(resume);
+  const result = await ProfileModel.findOneAndUpdate(
+    { username: username },
+    {
+      firstName,
+      lastName,
+      email,
+      city,
+      coverLetter,
+      dob,
+      education,
+      phone,
+      postcode,
+      skills,
+      state,
+      preferences,
+      resume,
+    }
+  );
+  if (result) {
+    res.status(200).json(result.populate('resume'));
+  } else {
+    res.status(404).json({
+      msg: 'No profile found',
+    });
+  }
 });
 
 router.get('/admin', validateLoginStatus, isAdmin, async (req, res) => {

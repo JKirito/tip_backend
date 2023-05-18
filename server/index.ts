@@ -30,6 +30,8 @@ console.log('Initialized Successfuly');
 
 main().catch((err) => console.error);
 
+var mongoclient;
+var mongobucket;
 async function main() {
   app.listen(PORT, () => {
     console.log(`Server up at PORT ${PORT}`);
@@ -38,6 +40,7 @@ async function main() {
   try {
     await mongoose.connect(`mongodb://127.0.0.1:27017/tip`).then((res) => {
       console.log(`Connected to MongoDB successfully`);
+      // baseDB.
     });
   } catch (err) {
     console.error(err);

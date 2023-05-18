@@ -11,13 +11,16 @@ export default class Profile {
   public user!: Ref<User>;
 
   @prop()
+  public username!: string;
+
+  @prop()
   public firstName!: string;
 
   @prop()
   public lastName!: string;
 
   @prop()
-  public dob!: Date;
+  public dob!: string;
 
   @prop()
   public email!: string;
@@ -41,16 +44,16 @@ export default class Profile {
   public education!: string;
 
   @prop()
-  public perferences!: string;
+  public preferences!: string;
 
   @prop()
   public skills!: string;
 
   @prop()
-  public coverletter!: string;
+  public coverLetter!: string;
 
   @prop()
-  public resume!: Blob;
+  public resume!: string;
 }
 
 export const ProfileModel = getModelForClass(Profile);
