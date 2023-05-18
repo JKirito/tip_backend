@@ -89,6 +89,13 @@ router.post('/signup', async (req, res) => {
         password: hash,
         role: role as Roles,
       });
+      const profileDocument = await ProfileModel.create({
+        user: document._id,
+        email: email,
+        username: username,
+        firstName: firstName,
+        lastName: lastName,
+      });
       res.sendStatus(200);
     }
   }
@@ -301,6 +308,19 @@ router.post(
     // });
 
     res.status(200).json(result.applicants);
+  }
+);
+
+router.post(
+  '/getprofile',
+  validateLoginStatus,
+  async (req: Request<{}, {}, { username: string }>, res: Response) => {
+    console.log(req.body.username);
+    const result = await ProfileModel.findOne({
+      username: req.body.username,
+    });
+    if (!result) return res.status(404).json({ msg: 'Profile not found' });
+    res.status(200).json(result);
   }
 );
 
