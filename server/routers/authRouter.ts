@@ -33,8 +33,8 @@ router.post('/login', async (req, res) => {
   } else {
     const valid = await argon2.verify(doc.password, password);
     if (valid) {
-      const token = jwt.sign({ username }, hashkey, {
-        expiresIn: '1h',
+      const token = jwt.sign({ username, role: doc.role }, hashkey, {
+        expiresIn: '10h',
       });
       res.json({ token, role: doc.role });
     } else {
@@ -106,6 +106,7 @@ router.get('/validate', validateLoginStatus, (req, res) => {
   res.status(200).json({
     msg: 'You are authorized',
     username: res.locals.username,
+    role: res.locals.role,
   });
 });
 
