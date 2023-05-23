@@ -11,6 +11,7 @@ Node JS and TypeScript are using for this development.
 Node.js
 Express
 MongoDB
+Docker
 
 # *Getting Started*
 To run the TIP Backend locally, you will need to have Node.js and MongoDB installed on your machine. Then, follow these steps:
@@ -22,7 +23,30 @@ To run the TIP Backend locally, you will need to have Node.js and MongoDB instal
 cd tip_backend
 
 3.Install the dependencies:
-npm install
+Installing Node :
+
+Step1: To download the latest version of npm, on the command line, run the following command:
+npm install -g npm
+Step2: To see if you already have Node.js and npm installed and check the installed version, run the following commands:
+node -v
+npm -v
+
+
+InstalLIng MongoDB
+
+Step 1: Download The Installer. Go to the download page at https://www.mongodb.com/try/download/community
+Step 2: Run The MongoDB Installer(a . msi file)
+Step 3: Specify An Environment Variable
+Step 4: Configure a Data Directory For All MongoDB Files
+Step 5: Run mongo
+
+Installing Docker
+Download Docker.exe : [GitHub Pages](https://docs.docker.com/desktop/install/windows-install/)
+After downloading Docker Desktop Installer.exe, run the following command in a terminal to install Docker Desktop:
+Step1: $ "Docker Desktop Installer.exe" install.
+Step2: Start-Process 'Docker Desktop Installer.exe' -Wait install.
+Step3: $ net localgroup docker-users <user> /add.
+
 
 4.Start the development server:
 npm run dev
